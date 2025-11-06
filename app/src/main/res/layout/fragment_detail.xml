@@ -7,15 +7,16 @@
     android:fitsSystemWindows="true"
     android:padding="16dp">
 
-    <androidx.appcompat.widget.Toolbar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/detail_toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:navigationIcon="@android:drawable/ic_menu_revert"
-        android:theme="?attr/actionBarTheme"
-        android:title="Detalhes"
-        app:layout_constraintTop_toTopOf="parent"
-        app:titleTextColor="@android:color/white" />
+        android:title="@string/detail_title"
+        app:titleTextColor="@android:color/white"
+        app:navigationIcon="@drawable/ic_arrow_back_24"
+        app:navigationIconTint="@android:color/white"
+        android:background="?attr/colorPrimary"
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <ImageView
         android:id="@+id/image_loading"

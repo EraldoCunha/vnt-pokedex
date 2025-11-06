@@ -9,6 +9,7 @@
     <string name="pokemon_types_label">Tipos</string>
     <string name="pokemon_height_weight">Altura: %.1f m | Peso: %.1f kg</string>
     <string name="pokemon_stats_format">HP: %d  |  Ataque: %d  |  Defesa: %d</string>
+    <string name="detail_title">Detalhes</string>
 
     <string-array name="pokemon_types">
         <item>todos</item>

@@ -6,8 +6,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import coil.load
 import com.app.vntpokedex.R
 import com.app.vntpokedex.viewmodel.PokemonDetailViewModel
@@ -36,6 +38,14 @@ class DetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val toolbar = view.findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.detail_toolbar)
+        (requireActivity() as AppCompatActivity).setSupportActionBar(toolbar)
+
+        (requireActivity() as AppCompatActivity).supportActionBar?.title = getString(R.string.detail_title)
+        toolbar.setNavigationOnClickListener {
+            findNavController().navigateUp()
+        }
+
         detailRoot = view.findViewById(R.id.detail_root)
         imageLoading = view.findViewById(R.id.image_loading)
         imagePokemon = view.findViewById(R.id.image_pokemon)
@@ -44,6 +54,10 @@ class DetailFragment : Fragment() {
         textTypes = view.findViewById(R.id.text_types)
         textMeasures = view.findViewById(R.id.pokemon_measures)
         textStats = view.findViewById(R.id.pokemon_stats)
+
+        val defaultColor = requireContext().getColorByType("normal")
+        detailRoot.setBackgroundColor(defaultColor)
+        toolbar.setBackgroundColor(defaultColor)
 
         val pokemonName = arguments?.getString("name")
         if (!pokemonName.isNullOrBlank()) {
@@ -75,6 +89,8 @@ class DetailFragment : Fragment() {
                 val mainType = it.types.firstOrNull()?.type?.name ?: "normal"
                 val color = requireContext().getColorByType(mainType)
                 detailRoot.setBackgroundColor(color)
+
+                toolbar.setBackgroundColor(color)
             }
         }
     }
