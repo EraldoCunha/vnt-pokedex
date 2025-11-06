@@ -11,6 +11,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import coil.load
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
+import coil.ImageLoader
 import com.app.vntpokedex.R
 import com.app.vntpokedex.viewmodel.PokemonDetailViewModel
 import com.app.vntpokedex.util.getColorByType
@@ -38,10 +41,12 @@ class DetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val toolbar = view.findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.detail_toolbar)
+        val toolbar =
+            view.findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.detail_toolbar)
         (requireActivity() as AppCompatActivity).setSupportActionBar(toolbar)
 
-        (requireActivity() as AppCompatActivity).supportActionBar?.title = getString(R.string.detail_title)
+        (requireActivity() as AppCompatActivity).supportActionBar?.title =
+            getString(R.string.detail_title)
         toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()
         }
@@ -55,7 +60,21 @@ class DetailFragment : Fragment() {
         textMeasures = view.findViewById(R.id.pokemon_measures)
         textStats = view.findViewById(R.id.pokemon_stats)
 
-        val defaultColor = requireContext().getColorByType("normal")
+        val loader = ImageLoader.Builder(requireContext())
+            .components {
+                if (android.os.Build.VERSION.SDK_INT >= 28) {
+                    add(ImageDecoderDecoder.Factory())
+                } else {
+                    add(GifDecoder.Factory())
+                }
+            }
+            .build()
+
+        imageLoading.load(R.drawable.magikarp_loading, loader)
+
+        setContentVisibility(false)
+
+        val defaultColor = requireContext().getColor(android.R.color.white)
         detailRoot.setBackgroundColor(defaultColor)
         toolbar.setBackgroundColor(defaultColor)
 
@@ -67,31 +86,48 @@ class DetailFragment : Fragment() {
         viewModel.pokemonDetail.observe(viewLifecycleOwner) { detail ->
             detail?.let {
 
-                imageLoading.visibility = View.GONE
-                imagePokemon.visibility = View.VISIBLE
+                view.postDelayed({
 
-                imagePokemon.load(it.sprites.front_default)
+                    imageLoading.visibility = View.GONE
+                    setContentVisibility(true)
 
-                textName.text = it.name.replaceFirstChar { c -> c.uppercase() }
-                textId.text = "#${it.id.toString().padStart(3, '0')}"
+                    imagePokemon.load(it.sprites.front_default)
 
-                textTypes.text = it.types.joinToString(" / ") { slot ->
-                    slot.type.name.replaceFirstChar { c -> c.uppercase() }
-                }
+                    textName.text = it.name.replaceFirstChar { c -> c.uppercase() }
+                    textId.text = "#${it.id.toString().padStart(3, '0')}"
 
-                textMeasures.text = getString(R.string.pokemon_height_weight, it.height/10.0, it.weight/10.0)
+                    textTypes.text = it.types.joinToString(" / ") { slot ->
+                        slot.type.name.replaceFirstChar { c -> c.uppercase() }
+                    }
 
-                val hp = it.stats.find { s -> s.stat.name == "hp" }?.base_stat ?: 0
-                val attack = it.stats.find { s -> s.stat.name == "attack" }?.base_stat ?: 0
-                val defense = it.stats.find { s -> s.stat.name == "defense" }?.base_stat ?: 0
-                textStats.text = getString(R.string.pokemon_stats_format, hp, attack, defense)
+                    textMeasures.text = getString(
+                        R.string.pokemon_height_weight,
+                        it.height / 10.0,
+                        it.weight / 10.0
+                    )
 
-                val mainType = it.types.firstOrNull()?.type?.name ?: "normal"
-                val color = requireContext().getColorByType(mainType)
-                detailRoot.setBackgroundColor(color)
+                    val hp = it.stats.find { s -> s.stat.name == "hp" }?.base_stat ?: 0
+                    val attack = it.stats.find { s -> s.stat.name == "attack" }?.base_stat ?: 0
+                    val defense = it.stats.find { s -> s.stat.name == "defense" }?.base_stat ?: 0
+                    textStats.text = getString(R.string.pokemon_stats_format, hp, attack, defense)
 
-                toolbar.setBackgroundColor(color)
+                    val mainType = it.types.firstOrNull()?.type?.name ?: "normal"
+                    val color = requireContext().getColorByType(mainType)
+                    detailRoot.setBackgroundColor(color)
+
+                    toolbar.setBackgroundColor(color)
+                }, 2000)
             }
         }
+    }
+
+    private fun setContentVisibility(visible: Boolean) {
+        val v = if (visible) View.VISIBLE else View.GONE
+        imagePokemon.visibility = v
+        textName.visibility = v
+        textId.visibility = v
+        textTypes.visibility = v
+        textMeasures.visibility = v
+        textStats.visibility = v
     }
 }
