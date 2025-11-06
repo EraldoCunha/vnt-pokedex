@@ -1,0 +1,50 @@
+<resources>
+    <string name="app_name">VntPokedex</string>
+    <string name="filter_type">Tipo</string>
+    <string name="filter_generation">Geração</string>
+    <string name="search_hint">Buscar Pokémon</string>
+    <string name="type_label">Tipo</string>
+    <string name="generation_label">Geração</string>
+    <string name="pokemon_image">Imagem do Pokémon</string>
+    <string name="pokemon_types_label">Tipos</string>
+    <string name="pokemon_height_weight">Altura: %.1f m | Peso: %.1f kg</string>
+    <string name="pokemon_stats_format">HP: %d  |  Ataque: %d  |  Defesa: %d</string>
+
+    <string-array name="pokemon_types">
+        <item>todos</item>
+        <item>normal</item>
+        <item>fire</item>
+        <item>water</item>
+        <item>grass</item>
+        <item>electric</item>
+        <item>ice</item>
+        <item>fighting</item>
+        <item>poison</item>
+        <item>ground</item>
+        <item>flying</item>
+        <item>psychic</item>
+        <item>bug</item>
+        <item>rock</item>
+        <item>ghost</item>
+        <item>dragon</item>
+        <item>dark</item>
+        <item>steel</item>
+        <item>fairy</item>
+    </string-array>
+
+    <string-array name="pokemon_generations">
+        <item>Todas</item>
+        <item>Gen 1 (Kanto)</item>
+        <item>Gen 2 (Johto)</item>
+        <item>Gen 3 (Hoenn)</item>
+        <item>Gen 4 (Sinnoh)</item>
+        <item>Gen 5 (Unova)</item>
+        <item>Gen 6 (Kalos)</item>
+        <item>Gen 7 (Alola)</item>
+        <item>Gen 8 (Galar)</item>
+        <item>Gen 9 (Paldea)</item>
+    </string-array>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+
+</resources>
