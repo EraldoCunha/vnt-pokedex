@@ -116,7 +116,7 @@ class DetailFragment : Fragment() {
                     detailRoot.setBackgroundColor(color)
 
                     toolbar.setBackgroundColor(color)
-                }, 2000)
+                }, 500)
             }
         }
     }

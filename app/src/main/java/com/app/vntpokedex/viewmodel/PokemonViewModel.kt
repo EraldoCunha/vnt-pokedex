@@ -1,18 +1,23 @@
 package com.app.vntpokedex.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.app.vntpokedex.data.local.TypeCacheDataStore
 import com.app.vntpokedex.data.model.Pokemon
 import com.app.vntpokedex.data.repository.PokemonRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class PokemonViewModel : ViewModel() {
+class PokemonViewModel(private val appContext: Context) : ViewModel() {
 
     private val repository = PokemonRepository()
+
+    private val typeStore = TypeCacheDataStore(appContext)
 
     private val _pokemonList = MutableLiveData<List<Pokemon>>()
     val pokemonList: LiveData<List<Pokemon>> get() = _pokemonList
@@ -22,6 +27,9 @@ class PokemonViewModel : ViewModel() {
 
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> get() = _error
+
+    private val _filterLoading = MutableLiveData<Boolean>()
+    val filterLoading: LiveData<Boolean> get() = _filterLoading
 
     private var allPokemons: List<Pokemon> = emptyList()
 
@@ -50,7 +58,6 @@ class PokemonViewModel : ViewModel() {
     fun search(query: String?) {
         val filtered = if (query.isNullOrBlank()) allPokemons
         else allPokemons.filter { it.name.contains(query, ignoreCase = true) }
-
         _pokemonList.value = filtered
     }
 
@@ -72,7 +79,13 @@ class PokemonViewModel : ViewModel() {
 
     fun filterByType(type: String) {
         currentType = if (type.equals("todos", ignoreCase = true)) null else type.lowercase()
-        applyFilters()
+
+        viewModelScope.launch {
+            _filterLoading.value = true
+            ensureTypesLoaded()
+            applyFilters()
+            _filterLoading.value = false
+        }
     }
 
     private fun applyFilters() {
@@ -95,11 +108,51 @@ class PokemonViewModel : ViewModel() {
     }
 
     private suspend fun fetchAndCacheType(id: Int): String? {
+        val stored = typeStore.getType(id)
+        if (stored != null) {
+            typeCache[id] = stored
+            return stored
+        }
+
         return withContext(Dispatchers.IO) {
             val detail = repository.getPokemonDetail(id.toString())
             val mainType = detail?.types?.firstOrNull()?.type?.name
-            if (mainType != null) typeCache[id] = mainType
+            if (mainType != null) {
+                typeCache[id] = mainType
+                typeStore.saveType(id, mainType)
+            }
             mainType
+        }
+    }
+
+    private suspend fun ensureTypesLoaded() {
+        if (typeCache.size >= allPokemons.size) return
+        withContext(Dispatchers.IO) {
+            allPokemons.forEach { pokemon ->
+                if (!typeCache.containsKey(pokemon.id)) {
+                    val stored = typeStore.getType(pokemon.id)
+                    if (stored != null) {
+                        typeCache[pokemon.id] = stored
+                    } else {
+                        val detail = repository.getPokemonDetail(pokemon.id.toString())
+                        val mainType = detail?.types?.firstOrNull()?.type?.name
+                        if (mainType != null) {
+                            typeCache[pokemon.id] = mainType
+                            typeStore.saveType(pokemon.id, mainType)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    class Factory(private val context: Context) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(PokemonViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                return PokemonViewModel(context.applicationContext) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }

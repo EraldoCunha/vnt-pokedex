@@ -57,6 +57,7 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment-ktx:2.6.0")
     implementation("androidx.navigation:navigation-ui-ktx:2.6.0")
     implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

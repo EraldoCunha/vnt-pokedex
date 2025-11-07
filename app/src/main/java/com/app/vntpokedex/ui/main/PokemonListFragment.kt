@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
-import android.widget.ProgressBar
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat.getSystemService
@@ -15,17 +15,24 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import coil.ImageLoader
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
+import coil.load
 import com.app.vntpokedex.R
 import com.app.vntpokedex.viewmodel.PokemonViewModel
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 
 class PokemonListFragment : Fragment() {
 
-    private val viewModel: PokemonViewModel by viewModels()
+    private val viewModel: PokemonViewModel by viewModels {
+        PokemonViewModel.Factory(requireContext())
+    }
     private lateinit var adapter: PokemonAdapter
     private lateinit var recyclerView: RecyclerView
     private lateinit var searchView: SearchView
-    private lateinit var progressBar: ProgressBar
+
+    private lateinit var loadingGif: ImageView
     private lateinit var typeFilter: MaterialAutoCompleteTextView
     private lateinit var genFilter: MaterialAutoCompleteTextView
 
@@ -41,9 +48,21 @@ class PokemonListFragment : Fragment() {
 
         recyclerView = view.findViewById(R.id.recycler_view)
         searchView = view.findViewById(R.id.search_view)
-        progressBar = view.findViewById(R.id.progress_bar)
+        loadingGif = view.findViewById(R.id.loading_gif)
         typeFilter = view.findViewById(R.id.typeFilter)
         genFilter = view.findViewById(R.id.genFilter)
+
+        val gifLoader = ImageLoader.Builder(requireContext())
+            .components {
+                if (android.os.Build.VERSION.SDK_INT >= 28) {
+                    add(ImageDecoderDecoder.Factory())
+                } else {
+                    add(GifDecoder.Factory())
+                }
+            }
+            .build()
+
+        loadingGif.load(R.drawable.magikarp_loading, gifLoader)
 
         view.clearFocus()
 
@@ -60,12 +79,16 @@ class PokemonListFragment : Fragment() {
             adapter.submitList(it)
         }
 
-        viewModel.loading.observe(viewLifecycleOwner) {
-            progressBar.visibility = if (it) View.VISIBLE else View.GONE
+        viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
+            updateLoadingState()
         }
 
         viewModel.error.observe(viewLifecycleOwner) {
             if (it != null) Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
+        }
+
+        viewModel.filterLoading.observe(viewLifecycleOwner) { isFiltering ->
+            updateLoadingState()
         }
 
         if (!viewModel.hasData()) viewModel.fetchAllPokemons()
@@ -109,8 +132,10 @@ class PokemonListFragment : Fragment() {
         val types = resources.getStringArray(R.array.pokemon_types)
         val generations = resources.getStringArray(R.array.pokemon_generations)
 
-        val typeAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, types)
-        val genAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, generations)
+        val typeAdapter =
+            ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, types)
+        val genAdapter =
+            ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, generations)
 
         typeFilter.setAdapter(typeAdapter)
         genFilter.setAdapter(genAdapter)
@@ -137,5 +162,13 @@ class PokemonListFragment : Fragment() {
     private fun hideKeyboard() {
         val imm = getSystemService(requireContext(), InputMethodManager::class.java)
         imm?.hideSoftInputFromWindow(view?.windowToken, 0)
+    }
+
+    private fun updateLoadingState() {
+        val isLoading = viewModel.loading.value == true
+        val isFiltering = viewModel.filterLoading.value == true
+
+        loadingGif.visibility = if (isLoading || isFiltering) View.VISIBLE else View.GONE
+        recyclerView.visibility = if (isLoading || isFiltering) View.INVISIBLE else View.VISIBLE
     }
 }
