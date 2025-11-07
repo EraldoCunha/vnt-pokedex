@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
@@ -35,6 +34,9 @@ class PokemonListFragment : Fragment() {
     private lateinit var loadingGif: ImageView
     private lateinit var typeFilter: MaterialAutoCompleteTextView
     private lateinit var genFilter: MaterialAutoCompleteTextView
+
+    private lateinit var typeAdapter: NoFilterArrayAdapter
+    private lateinit var genAdapter: NoFilterArrayAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -75,8 +77,12 @@ class PokemonListFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
 
-        viewModel.pokemonList.observe(viewLifecycleOwner) {
-            adapter.submitList(it)
+        setupSearchView()
+        setupFilters()
+
+        viewModel.pokemonList.observe(viewLifecycleOwner) { list ->
+            adapter.submitList(list)
+            restoreFiltersState()
         }
 
         viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
@@ -92,11 +98,15 @@ class PokemonListFragment : Fragment() {
         }
 
         if (!viewModel.hasData()) viewModel.fetchAllPokemons()
+        else {
+            restoreFiltersState()
+        }
+    }
 
-        setupSearchView()
-        setupFilters()
-
-        searchView.clearFocus()
+    override fun onResume() {
+        super.onResume()
+        viewModel.reapplyFilters()
+        restoreFiltersState()
     }
 
     private fun setupSearchView() {
@@ -127,35 +137,48 @@ class PokemonListFragment : Fragment() {
         searchView.clearFocus()
     }
 
-
     private fun setupFilters() {
-        val types = resources.getStringArray(R.array.pokemon_types)
-        val generations = resources.getStringArray(R.array.pokemon_generations)
+        val types = resources.getStringArray(R.array.pokemon_types).toList()
+        val generations = resources.getStringArray(R.array.pokemon_generations).toList()
 
-        val typeAdapter =
-            ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, types)
-        val genAdapter =
-            ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, generations)
+        typeAdapter = NoFilterArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            types
+        )
+        genAdapter = NoFilterArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            generations
+        )
 
         typeFilter.setAdapter(typeAdapter)
         genFilter.setAdapter(genAdapter)
 
-        typeFilter.isFocusable = false
-        typeFilter.isClickable = true
-        genFilter.isFocusable = false
-        genFilter.isClickable = true
-
-        typeFilter.setOnClickListener { typeFilter.showDropDown() }
-        genFilter.setOnClickListener { genFilter.showDropDown() }
-
-        typeFilter.setOnItemClickListener { parent, _, position, _ ->
-            val selectedType = parent.getItemAtPosition(position) as String
-            viewModel.filterByType(selectedType)
+        typeFilter.setOnClickListener {
+            typeFilter.showDropDown()
         }
 
-        genFilter.setOnItemClickListener { parent, _, position, _ ->
-            val selectedGen = parent.getItemAtPosition(position) as String
-            viewModel.filterByGeneration(selectedGen)
+        genFilter.setOnClickListener {
+            genFilter.showDropDown()
+        }
+
+        typeFilter.setOnItemClickListener { _, _, position, _ ->
+            viewModel.filterByType(typeAdapter.getItem(position)!!)
+        }
+
+        genFilter.setOnItemClickListener { _, _, position, _ ->
+            viewModel.filterByGeneration(genAdapter.getItem(position)!!)
+        }
+    }
+
+    private fun restoreFiltersState() {
+        viewModel.getSelectedType()?.let { type ->
+            typeFilter.setText(type.replaceFirstChar { it.uppercase() }, false)
+        }
+
+        viewModel.getSelectedGenerationLabel()?.let { gen ->
+            genFilter.setText(gen, false)
         }
     }
 

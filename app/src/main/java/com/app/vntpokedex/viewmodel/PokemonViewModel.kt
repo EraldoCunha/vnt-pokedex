@@ -36,6 +36,8 @@ class PokemonViewModel(private val appContext: Context) : ViewModel() {
     private var currentType: String? = null
     private var currentGen: IntRange? = null
 
+    private var currentQuery: String? = null
+
     private val typeCache = mutableMapOf<Int, String>()
 
     fun hasData() = allPokemons.isNotEmpty()
@@ -46,7 +48,7 @@ class PokemonViewModel(private val appContext: Context) : ViewModel() {
             try {
                 val pokemons = repository.getAllPokemons()
                 allPokemons = pokemons
-                _pokemonList.value = pokemons
+                computeAndPostList()
             } catch (e: Exception) {
                 _error.value = e.message
             } finally {
@@ -56,9 +58,8 @@ class PokemonViewModel(private val appContext: Context) : ViewModel() {
     }
 
     fun search(query: String?) {
-        val filtered = if (query.isNullOrBlank()) allPokemons
-        else allPokemons.filter { it.name.contains(query, ignoreCase = true) }
-        _pokemonList.value = filtered
+        currentQuery = query
+        computeAndPostList()
     }
 
     fun filterByGeneration(label: String) {
@@ -74,7 +75,7 @@ class PokemonViewModel(private val appContext: Context) : ViewModel() {
             "Gen 9 (Paldea)" -> 906..1010
             else -> null
         }
-        applyFilters()
+        computeAndPostList()
     }
 
     fun filterByType(type: String) {
@@ -83,28 +84,32 @@ class PokemonViewModel(private val appContext: Context) : ViewModel() {
         viewModelScope.launch {
             _filterLoading.value = true
             ensureTypesLoaded()
-            applyFilters()
+            computeAndPostList()
             _filterLoading.value = false
         }
     }
 
-    private fun applyFilters() {
-        viewModelScope.launch {
-            var list = allPokemons
+    private fun computeAndPostList() {
+        var list = allPokemons
 
-            currentGen?.let { range ->
-                list = list.filter { it.id in range }
-            }
-
-            currentType?.let { type ->
-                list = list.filter { pokemon ->
-                    val pokemonType = typeCache[pokemon.id] ?: fetchAndCacheType(pokemon.id)
-                    pokemonType == type
-                }
-            }
-
-            _pokemonList.value = list
+        currentGen?.let { range ->
+            list = list.filter { it.id in range }
         }
+
+        currentType?.let { type ->
+            list = list.filter { pokemon ->
+                val cachedType = typeCache[pokemon.id]
+                cachedType == type
+            }
+        }
+
+        currentQuery?.let { q ->
+            if (!q.isNullOrBlank()) {
+                list = list.filter { it.name.contains(q, ignoreCase = true) }
+            }
+        }
+
+        _pokemonList.value = list
     }
 
     private suspend fun fetchAndCacheType(id: Int): String? {
@@ -144,6 +149,27 @@ class PokemonViewModel(private val appContext: Context) : ViewModel() {
                 }
             }
         }
+    }
+
+    fun getSelectedGenerationLabel(): String? {
+        return when (currentGen) {
+            1..151 -> "Gen 1 (Kanto)"
+            152..251 -> "Gen 2 (Johto)"
+            252..386 -> "Gen 3 (Hoenn)"
+            387..493 -> "Gen 4 (Sinnoh)"
+            494..649 -> "Gen 5 (Unova)"
+            650..721 -> "Gen 6 (Kalos)"
+            722..809 -> "Gen 7 (Alola)"
+            810..905 -> "Gen 8 (Galar)"
+            906..1010 -> "Gen 9 (Paldea)"
+            else -> null
+        }
+    }
+
+    fun getSelectedType() = currentType
+
+    fun reapplyFilters() {
+        computeAndPostList()
     }
 
     class Factory(private val context: Context) : ViewModelProvider.Factory {
