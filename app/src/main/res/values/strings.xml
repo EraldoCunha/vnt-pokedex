@@ -6,10 +6,27 @@
     <string name="type_label">Tipo</string>
     <string name="generation_label">Geração</string>
     <string name="pokemon_image">Imagem do Pokémon</string>
-    <string name="pokemon_types_label">Tipos</string>
     <string name="pokemon_height_weight">Altura: %.1f m | Peso: %.1f kg</string>
     <string name="pokemon_stats_format">HP: %d  |  Ataque: %d  |  Defesa: %d</string>
     <string name="detail_title">Detalhes</string>
+    <string name="intro_logo_description">Logotipo da Pokédex</string>
+    <string name="pokemon_name_label">Nome do Pokémon</string>
+    <string name="pokemon_id_label">Número do Pokédex</string>
+    <string name="pokemon_types_label">Tipos do Pokémon</string>
+    <string name="pokemon_measures_label">Altura e Peso do Pokémon</string>
+    <string name="pokemon_stats_label">Status base do Pokémon</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="intro_title_desc">Nome da Pokédex</string>
+    <string name="toolbar_detail_description">Toolbar da tela de descrição do Pokémon</string>
+    <string name="image_loading_detail">Gif de carregamento de tela</string>
+    <string name="detail_pokemon_image">Imagem do Pokémon</string>
+    <string name="search_description">Campo de busca de Pokémons por nome</string>
+    <string name="filter_icon">Ícone de filtro</string>
+    <string name="type_filter">Filtro por tipo de Pokémon</string>
+    <string name="recyclerview_pokemons">Listagem de Pokémons</string>
+    <string name="loading_gif_image">Imagem de carregamento</string>
+    <string name="pokemon_name">Nome do Pokémon</string>
+    <string name="pokemon_id">ID do Pokémon</string>
 
     <string-array name="pokemon_types">
         <item>todos</item>
@@ -45,7 +62,5 @@
         <item>Gen 8 (Galar)</item>
         <item>Gen 9 (Paldea)</item>
     </string-array>
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-
 
 </resources>

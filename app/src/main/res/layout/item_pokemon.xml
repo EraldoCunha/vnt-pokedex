@@ -21,14 +21,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:contentDescription="@string/pokemon_name"/>
 
         <TextView
             android:id="@+id/text_id_pokemon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="14sp"
-            android:textColor="@color/black" />
+            android:textColor="@color/black"
+            android:contentDescription="@string/pokemon_id"/>
 
     </LinearLayout>
 </LinearLayout>
